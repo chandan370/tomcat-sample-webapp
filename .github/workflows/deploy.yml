@@ -34,7 +34,7 @@ jobs:
 
       - name: Deploy to Remote Server
         env:
-          WAR_SOURCE_PATH: target/tomcat-sample.war
+          WAR_SOURCE_PATH: target/sample.war
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_KEY: ${{ secrets.SERVER_KEY }}
