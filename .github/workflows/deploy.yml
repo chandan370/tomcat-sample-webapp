@@ -22,8 +22,8 @@ jobs:
 
       - name: Build WAR file
         run: |
-        cd tomcat-sample-webapp
-        mvn clean package # Use the pre-installed 'mvn' command
+          cd tomcat-sample-webapp
+          mvn clean package # Use the pre-installed 'mvn' command
 
       - name: Deploy to Remote Server
         env:
