@@ -21,9 +21,9 @@ jobs:
           distribution: 'temurin'
 
       - name: Build WAR file
-        # REMOVED: chmod +x mvnw (as mvnw is not in the repo)
-        # CHANGED: ./mvnw to mvn
-        run: mvn clean package # Use the pre-installed 'mvn' command
+        run: |
+        cd myapp
+        mvn clean package # Use the pre-installed 'mvn' command
 
       - name: Deploy to Remote Server
         env:
