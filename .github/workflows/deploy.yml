@@ -20,10 +20,6 @@ jobs:
       - name: List all files and folders
         run: ls -R
 
-- name: List all files and folders
-  run: ls -R
-
-
       - name: Set up Java 17 (LTS)
         uses: actions/setup-java@v4
         with:
