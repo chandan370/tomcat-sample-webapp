@@ -29,16 +29,17 @@ jobs:
       - name: Manually build WAR file
         run: |
           mkdir -p target
-          cd ..
           jar -cvf sample.war *
+          cp sample.war /usr/local/apache-tomcat-11.0.7/webapps
+          
 
       - name: Deploy to Remote Server
         env:
-          WAR_SOURCE_PATH: target/sample.war
+          WAR_SOURCE_PATH: /usr/local/apache-tomcat-11.0.7/webapps
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
           SERVER_KEY: ${{ secrets.SERVER_KEY }}
-          TOMCAT_WEBAPPS_DIR: "/var/lib/tomcat9/webapps"
+          TOMCAT_WEBAPPS_DIR: "/usr/local/apache-tomcat-11.0.7/webapps"
         run: |
           echo "$SERVER_KEY" > key.pem
           chmod 600 key.pem
@@ -49,7 +50,7 @@ jobs:
           if [[ "$BRANCH_NAME" == "staging" ]]; then
             DEPLOY_CONTEXT="staging"
           elif [[ "$BRANCH_NAME" == "production" ]]; then
-            DEPLOY_CONTEXT="production"
+            DEPLOY_CONTEXT="production"     
           else
             echo "Unknown branch ($BRANCH_NAME). Skipping deployment."
             exit 1
