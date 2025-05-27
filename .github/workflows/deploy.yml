@@ -30,7 +30,7 @@ jobs:
         run: |
           mkdir -p target
           cd ..
-          jar cvf target/tomcat-sample-webapp.war -C tomcat-sample-webapp/ . --exclude .git
+          jar -cvf sample.war *
 
       - name: Deploy to Remote Server
         env:
