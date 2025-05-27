@@ -41,6 +41,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           source: /tmp/tomcat/webapps/sample.war
           target: /usr/local/apache-tomcat-11.0.7/webapps
+      - name: SSH into Server and Deploy WAR
         run: |
           echo "$SERVER_KEY" > key.pem
           chmod 600 key.pem
@@ -58,18 +59,22 @@ jobs:
           fi
 
           DEPLOY_WAR_NAME="$DEPLOY_CONTEXT.war"
-          echo "Preparing to deploy branch '$BRANCH_NAME' as '$DEPLOY_WAR_NAME' to $TOMCAT_WEBAPPS_DIR"
+          echo "Preparing to deploy branch '$BRANCH_NAME' as '$DEPLOY_WAR_NAME'"
 
           echo "Stopping Tomcat service..."
-          ssh -i key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "sudo systemctl stop tomcat9" || { echo "Tomcat stop command failed or Tomcat was already stopped."; }
+    	  ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "sudo systemctl stop tomcat9"
 
-          echo "Cleaning up previous deployment at $TOMCAT_WEBAPPS_DIR/$DEPLOY_CONTEXT*..."
-          ssh -i key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "sudo rm -rf $TOMCAT_WEBAPPS_DIR/$DEPLOY_CONTEXT* $TOMCAT_WEBAPPS_DIR/$(basename $WAR_SOURCE_PATH)" || { echo "Cleanup command failed or no old deployment found."; }
+ 	  echo "Cleaning up previous deployment..."
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "sudo rm -rf /usr/local/apache-tomcat-11.0.7/webapps/$DEPLOY_CONTEXT*"
 
-          echo "Copying '$WAR_SOURCE_PATH' to '$SERVER_USER@$SERVER_IP:$TOMCAT_WEBAPPS_DIR/$DEPLOY_WAR_NAME'"
-          scp -i key.pem -o StrictHostKeyChecking=no "$WAR_SOURCE_PATH" "$SERVER_USER@$SERVER_IP:$TOMCAT_WEBAPPS_DIR/$DEPLOY_WAR_NAME"
+          echo "Moving new WAR file to Tomcat webapps..."
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "sudo mv /tmp/sample.war /usr/local/apache-tomcat-11.0.7/webapps/$DEPLOY_WAR_NAME"
 
           echo "Starting Tomcat service..."
-          ssh -i key.pem -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP "sudo systemctl start tomcat9"
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "sudo systemctl start tomcat9"
 
           echo "Deployment process finished for $DEPLOY_CONTEXT!"
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_KEY: ${{ secrets.SERVER_KEY }}
