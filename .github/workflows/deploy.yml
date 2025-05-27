@@ -26,10 +26,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build WAR file
+      - name: Manually build WAR file
         run: |
-          cd tomcat-sample-webapp
-          mvn clean package # Use the pre-installed 'mvn' command
+          mkdir -p target
+          cd ..
+          jar -cvf target/tomcat-sample.war tomcat-sample-webapp
 
       - name: Deploy to Remote Server
         env:
