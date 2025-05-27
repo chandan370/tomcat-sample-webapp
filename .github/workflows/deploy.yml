@@ -22,7 +22,7 @@ jobs:
 
       - name: Build WAR file
         run: |
-        cd myapp
+        cd /myapp
         mvn clean package # Use the pre-installed 'mvn' command
 
       - name: Deploy to Remote Server
