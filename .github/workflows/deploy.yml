@@ -27,8 +27,12 @@ jobs:
             jar -cvf production.war *
           fi
 
-      - name: Deploy WAR to Tomcat (Staging)
-        if: github.ref_name == 'staging'
+      - name: Deploy WAR to Tomcat via scp
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.TOMCAT_HOST_STAGE
+          host: ${{ github.ref_name == 'staging' && secrets.TOMCAT_HOST_STAGE || secrets.TOMCAT_HOST_PROD }}
+          username: ${{ github.ref_name == 'staging' && secrets.TOMCAT_USER_STAGE || secrets.TOMCAT_USER_PROD }}
+          key: ${{ github.ref_name == 'staging' && secrets.TOMCAT_KEY_STAGE || secrets.TOMCAT_KEY_PROD }}
+          source: ${{ github.ref_name == 'staging' && 'staging.war' || 'production.war' }}
+          target: ${{ github.ref_name == 'staging' && secrets.TOMCAT_PATH_STAGE || secrets.TOMCAT_PATH_PROD }}
+        
