@@ -3,48 +3,38 @@ name: Deploy Java Web App to EC2
 on:
   push:
     branches:
+      - staging
       - production
-
+      
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up OpenJDK 17
+      - name: Set up java
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'openjdk'
+          distribution: 'temurin'
 
-      - name: Package WAR (Optional)
+      - name: Package WAR
         run: |
-          # If your app is not already a WAR, package it
-          # Adjust paths as needed for your project structure
-          if [ -d "myapp" ]; then
-            jar -cvf myapp.war -C myapp .
-          fi
-        working-directory: ./
+        if [ "${{ github.ref_name }}" = "staging" ]; then
+          jar -cvf staging.war *
+        elif [ "${{ github.ref_name }}" = "production" ]; then
+          jar -cvf production.war *
+        fi
 
-      - name: Set up SSH key
-        env:
-          DEPLOY_KEY: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          echo "$DEPLOY_KEY" > key.pem
-          chmod 400 key.pem
-
-      - name: Copy files to EC2
-        uses: appleboy/scp-action@master
+      - name: Deploy WAR to Tomcat via SCP
+        uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "myapp.war"  # Or "myapp/" if deploying directory
-          target: "/opt/tomcat/webapps/"
+          host: ${{ github.ref_name == 'staging' && secrets.TOMCAT_HOST_STAGE || secrets.TOMCAT_HOST_PROD }}
+          username: ${{ github.ref_name == 'staging' && secrets.TOMCAT_USER_STAGE || secrets.TOMCAT_USER_PROD }}
+          key: ${{ github.ref_name == 'staging' && secrets.TOMCAT_KEY_STAGE || secrets.TOMCAT_KEY_PROD }}
+          source: ${{ github.ref_name == 'staging' && 'staging.war' || 'production.war' }}
+          target: ${{ github.ref_name == 'staging' && secrets.TOMCAT_PATH_STAGE || secrets.TOMCAT_PATH_PROD }}
+          
 
-      - name: Restart Tomcat
-        run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} '
-            sudo systemctl restart tomcat || sudo /opt/tomcat/bin/shutdown.sh && sudo /opt/tomcat/bin/startup.sh
-          '
+      
